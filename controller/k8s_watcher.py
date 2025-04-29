@@ -118,6 +118,7 @@ def watch_services():
             except Exception as e:
                 logger.error(f"Error deregistering service {svc.metadata.name}: {e}")
 
+
 def watch_endpoints():
     v1 = client.CoreV1Api()
     w = watch.Watch()
@@ -129,17 +130,34 @@ def watch_endpoints():
         logger.info(f"Event {event_type} on Endpoints {service_name} in {namespace}")
         try:
             svc = v1.read_namespaced_service(name=service_name, namespace=namespace)
+
             if not is_annotated(svc):
                 continue
             if not is_headless(svc):
                 continue
+
+            # Wait briefly to allow endpoints to populate
+            time.sleep(2)
+
+            # Refetch endpoints after wait
+            try:
+                ep = v1.read_namespaced_endpoints(name=service_name, namespace=namespace)
+            except ApiException as e:
+                if e.status == 404:
+                    logger.warning(f"Endpoints for {service_name} still not found after wait.")
+                    continue
+                else:
+                    raise
+
             logger.info(f"Syncing endpoints for service {service_name}")
             register_service_endpoints(svc, ep)
+
         except ApiException as e:
             if e.status == 404:
                 logger.warning(f"Service {service_name} in {namespace} not found.")
             else:
                 logger.error(f"Error syncing service {service_name}: {e}")
+
 
 def start():
     config.load_incluster_config()
