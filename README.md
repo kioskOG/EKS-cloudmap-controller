@@ -285,9 +285,3 @@ PRs welcome! This is a focused solution but extensible for health checks, weight
 - AWS Cloud Map
 - Kubernetes ExternalDNS
 - Service Mesh-less discovery
-
-
-
-
-# Slack webhook simulation
-SLACK_WEBHOOK = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
